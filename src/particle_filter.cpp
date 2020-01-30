@@ -23,13 +23,17 @@ using std::vector;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
 
+  // set number of particles
   num_particles_ = 1000;
+
   std::default_random_engine noise_gen;
   std::normal_distribution<double> distrib_x(x, std[0]);
   std::normal_distribution<double> distrib_y(y, std[1]);
   std::normal_distribution<double> distrib_theta(theta, std[2]);
   Particle init_particle;
 
+  // init all particles with random distribution with input noise around input
+  // state
   for (int i = 0; i < num_particles_; i++) {
     init_particle.x = distrib_x(noise_gen);
     init_particle.y = distrib_y(noise_gen);
@@ -47,13 +51,39 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 
 void ParticleFilter::prediction(double delta_t, double std_pos[],
                                 double velocity, double yaw_rate) {
-  /**
-   * TODO: Add measurements to each particle and add random Gaussian noise.
-   * NOTE: When adding noise you may find std::normal_distribution
-   *   and std::default_random_engine useful.
-   *  http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
-   *  http://www.cplusplus.com/reference/random/default_random_engine/
-   */
+
+  std::default_random_engine noise_gen;
+
+  // predict particles with input movement using bicycle model
+  for (auto &particle : particles) {
+    auto x_0 = particle.x;
+    auto y_0 = particle.x;
+    auto theta_0 = particle.x;
+
+    if (abs(yaw_rate) > 0.001) {
+      particle.x =
+          x_0 + velocity *
+                    ((sin(theta_0 + yaw_rate * delta_t) - sin(theta_0))) /
+                    yaw_rate;
+      particle.y =
+          y_0 + velocity *
+                    ((-cos(theta_0 + yaw_rate * delta_t) + cos(theta_0))) /
+                    yaw_rate;
+      particle.theta = theta_0 + yaw_rate * delta_t;
+
+    } else {
+      particle.x = x_0 - velocity * sin(theta_0);
+      particle.y = y_0 + velocity * cos(theta_0);
+    }
+
+    // add random noise to particles using input noise
+    std::normal_distribution<double> distrib_x(particle.x, std_pos[0]);
+    std::normal_distribution<double> distrib_y(particle.y, std_pos[1]);
+    std::normal_distribution<double> distrib_theta(particle.theta, std_pos[2]);
+    particle.x = distrib_x(noise_gen);
+    particle.y = distrib_y(noise_gen);
+    particle.theta = distrib_theta(noise_gen);
+  }
 }
 
 void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
