@@ -22,22 +22,15 @@ using std::string;
 using std::vector;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
-  /**
-   * TODO: Set the number of particles. Initialize all particles to
-   *   first position (based on estimates of x, y, theta and their uncertainties
-   *   from GPS) and all weights to 1.
-   * TODO: Add random Gaussian noise to each particle.
-   * NOTE: Consult particle_filter.h for more information about this method
-   *   (and others in this file).
-   */
+
   num_particles_ = 1000;
   std::default_random_engine noise_gen;
   std::normal_distribution<double> distrib_x(x, std[0]);
   std::normal_distribution<double> distrib_y(y, std[1]);
   std::normal_distribution<double> distrib_theta(theta, std[2]);
+  Particle init_particle;
 
   for (int i = 0; i < num_particles_; i++) {
-    Particle init_particle;
     init_particle.x = distrib_x(noise_gen);
     init_particle.y = distrib_x(noise_gen);
     init_particle.theta = distrib_x(noise_gen);
