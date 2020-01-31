@@ -60,7 +60,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
     auto y_0 = particle.x;
     auto theta_0 = particle.x;
 
-    if (abs(yaw_rate) > 0.001) {
+    if (fabs(yaw_rate) > 0.001) {
       particle.x =
           x_0 + velocity *
                     ((sin(theta_0 + yaw_rate * delta_t) - sin(theta_0))) /
@@ -72,8 +72,8 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
       particle.theta = theta_0 + yaw_rate * delta_t;
 
     } else {
-      particle.x = x_0 - velocity * sin(theta_0);
-      particle.y = y_0 + velocity * cos(theta_0);
+      particle.x = x_0 + velocity * cos(theta_0);
+      particle.y = y_0 + velocity * sin(theta_0);
     }
 
     // add random noise to particles using input noise
