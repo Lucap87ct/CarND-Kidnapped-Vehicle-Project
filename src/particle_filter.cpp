@@ -86,16 +86,20 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
   }
 }
 
-void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
+void ParticleFilter::dataAssociation(const vector<LandmarkObs> landmarks,
                                      vector<LandmarkObs> &observations) {
-  /**
-   * TODO: Find the predicted measurement that is closest to each
-   *   observed measurement and assign the observed measurement to this
-   *   particular landmark.
-   * NOTE: this method will NOT be called by the grading code. But you will
-   *   probably find it useful to implement this method and use it as a helper
-   *   during the updateWeights phase.
-   */
+  double dist_temp;
+  for (auto &observation : observations) {
+    double min_dist = 1e3;
+    for (const auto &landmark : landmarks) {
+      dist_temp = std::sqrt(pow(observation.x - landmark.x, 2) +
+                            pow(observation.y - landmark.y, 2));
+      if (dist_temp < min_dist) {
+        min_dist = dist_temp;
+        observation.id = landmark.id;
+      }
+    }
+  }
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
@@ -171,9 +175,10 @@ void ParticleFilter::SetAssociations(Particle &particle,
                                      const vector<double> &sense_y) {
   // particle: the particle to which assign each listed association,
   //   and association's (x,y) world coordinates mapping
-  // associations: The landmark id that goes along with each listed association
-  // sense_x: the associations x mapping already converted to world coordinates
-  // sense_y: the associations y mapping already converted to world coordinates
+  // associations: The landmark id that goes along with each listed
+  // association sense_x: the associations x mapping already converted to
+  // world coordinates sense_y: the associations y mapping already converted
+  // to world coordinates
   particle.associations = associations;
   particle.sense_x = sense_x;
   particle.sense_y = sense_y;
