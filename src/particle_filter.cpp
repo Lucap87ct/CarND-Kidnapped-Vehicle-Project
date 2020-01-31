@@ -103,13 +103,13 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                                    const Map &map_landmarks) {
 
   double obs_x_temp, obs_y_temp;
-  int landmark_id;
   double landmark_x_temp, landmark_y_temp;
   double exponent, update_prob_temp;
 
+  // loop on all particles
   for (auto &particle : particles) {
 
-    // transform observations in map frame
+    // transform observations in map frame at particle state
     vector<LandmarkObs> observations_in_map_frame;
     for (const auto &observation : observations) {
       obs_x_temp = particle.x + cos(particle.theta) * observation.x -
@@ -120,10 +120,22 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
           LandmarkObs{observation.id, obs_x_temp, obs_y_temp});
     }
 
-    // TODO find landmarks in range
-    // TODO data association mapped observations and landmarks (find closest
-    // landmark_id)
+    // find landmarks in range of the particle
     vector<LandmarkObs> landmarks_in_range;
+    double dist_landmark_particle;
+    for (const auto &landmark : map_landmarks.landmark_list) {
+      dist_landmark_particle = std::sqrt(pow(landmark.x_f - particle.x, 2) +
+                                         pow(landmark.y_f - particle.y, 2));
+      if (dist_landmark_particle <= sensor_range) {
+        landmarks_in_range.push_back(
+            LandmarkObs{landmark.id_i, landmark.x_f, landmark.y_f});
+      }
+    }
+
+    // TODO data association mapped observations and landmarks
+    dataAssociation(landmarks_in_range, observations_in_map_frame);
+
+    // TODO find closest landmark to observation
     landmark_x_temp = 0.0;
     landmark_y_temp = 0.0;
 
