@@ -101,19 +101,47 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                                    const vector<LandmarkObs> &observations,
                                    const Map &map_landmarks) {
-  /**
-   * TODO: Update the weights of each particle using a mult-variate Gaussian
-   *   distribution. You can read more about this distribution here:
-   *   https://en.wikipedia.org/wiki/Multivariate_normal_distribution
-   * NOTE: The observations are given in the VEHICLE'S coordinate system.
-   *   Your particles are located according to the MAP'S coordinate system.
-   *   You will need to transform between the two systems. Keep in mind that
-   *   this transformation requires both rotation AND translation (but no
-   * scaling). The following is a good resource for the theory:
-   *   https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
-   *   and the following is a good resource for the actual equation to implement
-   *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
-   */
+
+  double obs_x_temp, obs_y_temp;
+  int landmark_id;
+  double landmark_x_temp, landmark_y_temp;
+  double exponent, update_prob_temp;
+
+  for (auto &particle : particles) {
+
+    // transform observations in map frame
+    vector<LandmarkObs> observations_in_map_frame;
+    for (const auto &observation : observations) {
+      obs_x_temp = particle.x + cos(particle.theta) * observation.x -
+                   sin(particle.theta) * observation.y;
+      obs_y_temp = particle.y + sin(particle.theta) * observation.x +
+                   cos(particle.theta * observation.y);
+      observations_in_map_frame.push_back(
+          LandmarkObs{observation.id, obs_x_temp, obs_y_temp});
+    }
+
+    // TODO find landmarks in range
+    // TODO data association mapped observations and landmarks (find closest
+    // landmark_id)
+    vector<LandmarkObs> landmarks_in_range;
+    landmark_x_temp = 0.0;
+    landmark_y_temp = 0.0;
+
+    // reset weight
+    particle.weight = 1.0;
+
+    // calculate weight
+    for (const auto &observation : observations_in_map_frame) {
+      exponent = -(pow(observation.x - landmark_x_temp, 2) /
+                       (2 * M_PI * std_landmark[0] * std_landmark[1]) +
+                   pow(observation.y - landmark_y_temp, 2) /
+                       (2 * M_PI * std_landmark[0] * std_landmark[1]));
+      update_prob_temp =
+          exp(exponent) / (2 * M_PI * std_landmark[0] * std_landmark[1]);
+      update_prob_temp = std::max(update_prob_temp, 0.01);
+      particle.weight = particle.weight * update_prob_temp;
+    }
+  }
 }
 
 void ParticleFilter::resample() {
