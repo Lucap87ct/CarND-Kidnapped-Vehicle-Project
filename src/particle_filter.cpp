@@ -108,6 +108,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 
   double obs_x_temp, obs_y_temp;
   double landmark_x_temp, landmark_y_temp;
+  bool found_close_landmark{false};
   double exponent, update_prob_temp;
 
   // loop on all particles
@@ -136,26 +137,38 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       }
     }
 
-    // TODO data association mapped observations and landmarks
+    // data association between mapped observations and landmarks
     dataAssociation(landmarks_in_range, observations_in_map_frame);
-
-    // TODO find closest landmark to observation
-    landmark_x_temp = 0.0;
-    landmark_y_temp = 0.0;
 
     // reset weight
     particle.weight = 1.0;
 
     // calculate weight
     for (const auto &observation : observations_in_map_frame) {
-      exponent = -(pow(observation.x - landmark_x_temp, 2) /
-                       (2 * M_PI * std_landmark[0] * std_landmark[1]) +
-                   pow(observation.y - landmark_y_temp, 2) /
-                       (2 * M_PI * std_landmark[0] * std_landmark[1]));
-      update_prob_temp =
-          exp(exponent) / (2 * M_PI * std_landmark[0] * std_landmark[1]);
-      update_prob_temp = std::max(update_prob_temp, 0.01);
-      particle.weight = particle.weight * update_prob_temp;
+
+      // find closest landmark to observation
+      landmark_x_temp = 0.0;
+      landmark_y_temp = 0.0;
+      for (const auto &landmark : landmarks_in_range) {
+        if (observation.id == landmark.id) {
+          landmark_x_temp = landmark.x;
+          landmark_y_temp = landmark.y;
+          found_close_landmark = true;
+          break;
+        }
+      }
+
+      // update weight only if found a close landmark to observation
+      if (found_close_landmark) {
+        exponent = -(pow(observation.x - landmark_x_temp, 2) /
+                         (2 * M_PI * std_landmark[0] * std_landmark[1]) +
+                     pow(observation.y - landmark_y_temp, 2) /
+                         (2 * M_PI * std_landmark[0] * std_landmark[1]));
+        update_prob_temp =
+            exp(exponent) / (2 * M_PI * std_landmark[0] * std_landmark[1]);
+        update_prob_temp = std::max(update_prob_temp, 0.01);
+        particle.weight = particle.weight * update_prob_temp;
+      }
     }
   }
 }
