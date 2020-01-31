@@ -114,9 +114,6 @@ private:
 
   // Flag, if filter is initialized
   bool is_initialized_;
-
-  // Vector of weights of all particles
-  std::vector<double> weights_;
 };
 
 #endif // PARTICLE_FILTER_H_
