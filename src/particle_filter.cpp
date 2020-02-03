@@ -57,7 +57,7 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
     auto y_0 = particle.y;
     auto theta_0 = particle.theta;
 
-    if (fabs(yaw_rate) > 0.001) {
+    if (fabs(yaw_rate) > 1e-3) {
       particle.x =
           x_0 + velocity *
                     ((sin(theta_0 + yaw_rate * delta_t) - sin(theta_0))) /
@@ -108,6 +108,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
   double landmark_x_temp, landmark_y_temp;
   bool found_close_landmark{false};
   double exponent, update_prob_temp;
+
+  double weights_sum = 0.0;
 
   // loop on all particles
   for (auto &particle : particles) {
@@ -164,10 +166,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                          (2 * M_PI * std_landmark[0] * std_landmark[1]));
         update_prob_temp =
             exp(exponent) / (2 * M_PI * std_landmark[0] * std_landmark[1]);
-        update_prob_temp = std::max(update_prob_temp, 0.01);
+        update_prob_temp = std::max(update_prob_temp, 1.0e-2);
         particle.weight = particle.weight * update_prob_temp;
       }
     }
+
+    weights_sum += particle.weight;
+  }
+
+  for (auto &particle : particles) {
+    particle.weight = particle.weight / weights_sum;
   }
 }
 
@@ -196,21 +204,6 @@ void ParticleFilter::resample() {
   for (const auto &particle : resampled_particles) {
     particles.push_back(particle);
   }
-}
-
-void ParticleFilter::SetAssociations(Particle &particle,
-                                     const vector<int> &associations,
-                                     const vector<double> &sense_x,
-                                     const vector<double> &sense_y) {
-  // particle: the particle to which assign each listed association,
-  //   and association's (x,y) world coordinates mapping
-  // associations: The landmark id that goes along with each listed
-  // association sense_x: the associations x mapping already converted to
-  // world coordinates sense_y: the associations y mapping already converted
-  // to world coordinates
-  particle.associations = associations;
-  particle.sense_x = sense_x;
-  particle.sense_y = sense_y;
 }
 
 string ParticleFilter::getAssociations(Particle best) {
