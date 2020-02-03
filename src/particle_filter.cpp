@@ -120,7 +120,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       obs_x_temp = particle.x + cos(particle.theta) * observation.x -
                    sin(particle.theta) * observation.y;
       obs_y_temp = particle.y + sin(particle.theta) * observation.x +
-                   cos(particle.theta * observation.y);
+                   cos(particle.theta) * observation.y;
       observations_in_map_frame.push_back(
           LandmarkObs{observation.id, obs_x_temp, obs_y_temp});
     }
@@ -166,7 +166,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
                          (2 * M_PI * std_landmark[0] * std_landmark[1]));
         update_prob_temp =
             exp(exponent) / (2 * M_PI * std_landmark[0] * std_landmark[1]);
-        update_prob_temp = std::max(update_prob_temp, 1.0e-2);
+        update_prob_temp = std::max(update_prob_temp, 1.0e-4);
         particle.weight = particle.weight * update_prob_temp;
       }
     }
