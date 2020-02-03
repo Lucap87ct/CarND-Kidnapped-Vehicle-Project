@@ -182,10 +182,21 @@ void ParticleFilter::resample() {
     if (particle.weight > max_weight) {
       max_weight = particle.weight;
     }
+  }
 
-    std::vector<Particle> resampled_particles;
-    int index = (rand() % (num_particles_ + 1));
-    // TODO complete resampling wheel
+  std::vector<Particle> resampled_particles;
+  int index = (rand() % (num_particles_ + 1));
+  for (int i = 0; i < num_particles_; i++) {
+    beta += (static_cast<double>(rand()) / RAND_MAX) * 2.0 * max_weight;
+    while (beta > particles[index].weight) {
+      beta -= particles[index].weight;
+      index = (index + 1) % num_particles_;
+    }
+    resampled_particles.push_back(particles[index]);
+  }
+  particles.clear();
+  for (const auto &particle : resampled_particles) {
+    particles.push_back(particle);
   }
 }
 
