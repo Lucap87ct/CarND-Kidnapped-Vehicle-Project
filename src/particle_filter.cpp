@@ -39,12 +39,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     init_particle.y = distrib_y(noise_gen);
     init_particle.theta = distrib_theta(noise_gen);
     init_particle.weight = 1.0;
+    init_particle.id = i;
     particles.push_back(init_particle);
   }
-
-  std::cout
-      << "--------------------- Particles initialized ---------------------"
-      << std::endl;
 
   is_initialized_ = true;
 }
@@ -57,8 +54,8 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
   // predict particles with input movement using bicycle model
   for (auto &particle : particles) {
     auto x_0 = particle.x;
-    auto y_0 = particle.x;
-    auto theta_0 = particle.x;
+    auto y_0 = particle.y;
+    auto theta_0 = particle.theta;
 
     if (fabs(yaw_rate) > 0.001) {
       particle.x =
@@ -72,8 +69,9 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
       particle.theta = theta_0 + yaw_rate * delta_t;
 
     } else {
-      particle.x = x_0 + velocity * cos(theta_0);
-      particle.y = y_0 + velocity * sin(theta_0);
+      particle.x = x_0 + velocity * delta_t * cos(theta_0);
+      particle.y = y_0 + velocity * delta_t * sin(theta_0);
+      particle.theta = theta_0;
     }
 
     // add random noise to particles using input noise
